@@ -21,7 +21,7 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Replace with your ipinfo.io token
-IPINFO_TOKEN = "352aedaf3914f5"
+IPINFO_TOKEN = ""
 
 # Global data structures
 connection_data = []
