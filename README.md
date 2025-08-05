@@ -14,22 +14,6 @@ A Flask-based web application for **real-time network traffic monitoring**, **an
 - WebSocket-based live traffic visualization
 - REST APIs and CSV export for connections & anomalies
 
----
-
-## 📋 Table of Contents
-
-- [Prerequisites](#prerequisites)
-- [Installation and Setup](#installation-and-setup)
-- [Application Structure](#application-structure)
-- [Modules and Functions](#modules-and-functions)
-- [API Endpoints](#api-endpoints)
-- [Data Structures](#data-structures)
-- [Usage](#usage)
-- [Security Considerations](#security-considerations)
-- [Troubleshooting](#troubleshooting)
-- [Extending the Application](#extending-the-application)
-
----
 
 ## ✅ Prerequisites
 
