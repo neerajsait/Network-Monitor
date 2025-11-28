@@ -1,145 +1,92 @@
-# Network Monitoring Application
+# NetWatch Ultimate: SIEM & Network Threat Monitor
 
-A Flask-based web application for **real-time network traffic monitoring**, **anomaly detection**, and **deep packet inspection**. It provides a browser-based dashboard and RESTful APIs to visualize, analyze, and export network activity and security insights.
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Flask](https://img.shields.io/badge/Framework-Flask-green) ![Security](https://img.shields.io/badge/Security-Scapy%20%26%20DPI-red)
 
----
+**NetWatch Ultimate** is a custom Host-Based Intrusion Detection System (HIDS) and SIEM dashboard designed to monitor live network traffic, visualize active connections via GeoIP, and detect anomalies in real-time.
 
-## 🧩 Key Features
-
-- Real-time monitoring of active network connections
-- GeoIP and hostname resolution
-- Deep Packet Inspection (DPI) with cardholder data detection
-- DNS query capture and domain resolution
-- Anomaly detection (e.g., port scans, high CPU usage)
-- WebSocket-based live traffic visualization
-- REST APIs and CSV export for connections & anomalies
-
-
-## ✅ Prerequisites
-
-- **OS**: Linux (preferred), macOS, or Windows (limited support)
-- **Python**: 3.8+
-- **Permissions**: Root/admin access for packet capture
-- **Network Interface**: Default is `eth0`, customizable
-
-### Dependencies
-
-- `Flask`
-- `Flask-SocketIO`
-- `psutil`
-- `scapy`
-- `ping3`
-- `requests`
-- `dnspython`
-
-### External Services
-
-- [ipinfo.io](https://ipinfo.io/) API token (set as `IPINFO_TOKEN`)
+It features **Deep Packet Inspection (DPI)** to identify unencrypted sensitive data (DLP) and utilizes a **multi-threaded architecture** to ensure low-latency monitoring without system freeze.
 
 ---
 
-## ⚙️ Installation and Setup
+## 🚀 Key Features
 
-```bash
-# Clone the repo
-git clone <repository-url>
-cd <repository-directory>
+### 🛡️ Intrusion Detection & Security
+* **Deep Packet Inspection (DPI):** Analyzes raw TCP/UDP packet payloads using `Scapy` to identify suspicious data.
+* **Data Loss Prevention (DLP):** Implements Regex-based pattern matching to detect unencrypted Credit Card leaks (PCI-DSS compliance check).
+* **Honeypot Trap:** Listens on **Port 9999** to detect and log unauthorized LAN scanning attempts (e.g., Nmap scans).
+* **Lateral Movement Detection:** Identifies suspicious internal IP scans and connection attempts.
 
-# Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+### 🌐 Network Visualization
+* **Live Process Mapping:** Correlates network connections to specific Process IDs (PIDs) and Application names.
+* **GeoIP Tracking:** Resolves IP addresses to physical locations (City, Country, ISP) to spot anomalous cross-border traffic (e.g., C2 connections).
+* **DNS Sniffing:** Captures and logs DNS queries in real-time to detect "Shadow IT" or malware callbacks.
 
-# Install dependencies
-pip install flask flask-socketio psutil ping3 requests dnspython scapy
-
-
-
-
-
-## 🔧 Modules and Functions
-
-### Core Functions
-
-- **`get_app_info(pid)`**  
-  Retrieves the process name and path using a given process ID.
-
-- **`get_geoip_info(ip)`**  
-  Fetches GeoIP information (country, city, organization, etc.) using the ipinfo.io API.
-
-- **`get_hostname(ip)`**  
-  Performs a reverse DNS lookup to resolve the IP address to a hostname.
-
-- **`get_network_metrics(ip)`**  
-  Uses `ping3` to measure latency (ping) and packet loss to a target IP.
-
-- **`detect_cardholder_data(payload)`**  
-  Scans packet payloads for patterns resembling sensitive cardholder data.
-
-- **`capture_packets(interface)`**  
-  Listens on a network interface using `scapy` for packet inspection and extracts metadata.
-
-- **`capture_dns_queries(interface)`**  
-  Captures DNS queries using `scapy` and logs domain request attempts.
-
-- **`resolve_domain(domain)`**  
-  Resolves a domain name to its corresponding IP address using `dnspython`.
-
-- **`detect_anomalies(connections)`**  
-  Analyzes active connections to identify potential threats like long-living connections, packet anomalies, or suspicious activity.
-
-- **`detect_port_scanning()`**  
-  Detects signs of port scanning by monitoring repetitive requests across multiple ports.
-
-- **`get_interface_stats()`**  
-  Retrieves usage statistics (bytes sent/received) for each network interface using `psutil`.
-
-- **`get_network_data()`**  
-  Aggregates all current network connections, performs data enrichment (e.g., GeoIP), and returns a structured list.
-
-- **`get_top_apps()`**  
-  Returns the top N applications generating the most network traffic.
-
-- **`background_task()`**  
-  A repeating background task (every 5 seconds) that emits updated connection and interface data to the front end using WebSockets.
+### ⚡ Performance
+* **Multi-Threaded Architecture:** Network sniffing runs on daemon threads to prevent blocking the Flask web server.
+* **Non-Blocking LAN Scan:** Discovers devices on the local network asynchronously without freezing the UI.
+* **Resource Monitoring:** Real-time tracking of CPU, RAM, and Bandwidth usage.
 
 ---
 
-## 🌐 API Endpoints
+## 🛠️ Tech Stack
 
-### Web Interface
+* **Core:** Python 3.x
+* **Web Framework:** Flask, Flask-SocketIO (WebSockets)
+* **Packet Sniffing:** Scapy (w/ Npcap or Libpcap)
+* **System Metrics:** Psutil
+* **Network Utils:** Ping3, Requests
 
-- **`GET /`**  
-  Loads the browser-based network monitoring dashboard (`index.html`).
+---
 
-### 📡 Network Data
+## ⚙️ Installation
 
-- **`GET /api/connections`**  
-  Returns all currently active and enriched network connection data.
+### Prerequisites
+1.  **Python 3.8+**
+2.  **Npcap (Windows Only):** Install [Npcap](https://npcap.com/) with **"Install in API-compatible Mode"** checked.
+3.  **Root/Admin Privileges:** Required for packet sniffing.
 
-- **`GET /api/interfaces`**  
-  Retrieves real-time network usage statistics (e.g., upload/download speed).
+### Setup
 
-- **`GET /api/packets`**  
-  Returns a log of inspected packets captured from the network interface.
+1.  **Clone the repository**
+    ```bash
+    git clone [https://github.com/yourusername/netwatch-ultimate.git](https://github.com/yourusername/netwatch-ultimate.git)
+    cd netwatch-ultimate
+    ```
 
-- **`GET /api/dns_queries`**  
-  Retrieves recent DNS queries made by the system.
+2.  **Install Dependencies**
+    ```bash
+    pip install flask flask-socketio psutil scapy requests ping3
+    ```
 
-- **`GET /api/pie_data`**  
-  Provides application-level traffic distribution data for pie chart rendering.
+---
 
-### 🛠️ Helper & Export
+## 🖥️ Usage
 
-- **`GET /api/help`**  
-  Provides tooltip descriptions and metadata for the UI.
+1.  **Run the Application**
+    * **Windows:** Run Command Prompt or PowerShell as **Administrator**.
+    * **Linux/Mac:** Use `sudo`.
 
-- **`POST /api/connections/filter`**  
-  Accepts filter criteria (e.g., IP address, protocol, port) and returns matching connections.
+    ```bash
+    # Windows
+    python app.py
 
-- **`GET /api/export`**  
-  Exports current connection data to a downloadable CSV file.
+    # Linux
+    sudo python3 app.py
+    ```
 
-- **`GET /api/export_anomalies`**  
-  Exports detected anomalies (e.g., scans, long sessions) to a CSV report.
-### 📜 License
-This project is open-source.
+2.  **Access the Dashboard**
+    Open your browser and navigate to:
+    `http://localhost:5000`
+
+---
+
+## ⚠️ Disclaimer
+
+**Educational Purpose Only.**
+This tool is intended for use on networks and systems you own or have explicit permission to monitor. Unauthorized packet sniffing or network scanning is illegal in many jurisdictions. The developer assumes no liability for misuse.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
