@@ -49,8 +49,8 @@ It features **Deep Packet Inspection (DPI)** to identify unencrypted sensitive d
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/yourusername/netwatch-ultimate.git](https://github.com/yourusername/netwatch-ultimate.git)
-    cd netwatch-ultimate
+    git clone 
+    cd 
     ```
 
 2.  **Install Dependencies**
