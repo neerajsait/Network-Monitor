@@ -1,3 +1,38 @@
+# Network Monitor
+
+> Web-based network monitoring dashboard
+
+Built with HTML and focused on dashboard, html, javascript, network-monitor.
+
+## About this project
+
+This repository is part of **Neeraj Sai's** growing collection of software projects, experiments, and learning builds. It reflects a practical, curious approach to creating useful products and understanding how they work under the hood.
+
+## Getting started
+
+Clone the repository and follow the setup instructions for the project's framework or language:
+
+```bash
+git clone https://github.com/neerajsait/Network-Monitor.git
+cd Network-Monitor
+```
+
+Check the project files for the available run commands and configuration requirements.
+
+## Links
+
+[Repository](https://github.com/neerajsait/Network-Monitor)
+
+## Author
+
+**Tiruveedhi Neeraj Venkata Sai**
+
+- GitHub: [@neerajsait](https://github.com/neerajsait)
+- Portfolio: [neeraj's portfolio](https://github.com/neerajsait/portfoliomain)
+
+
+## Existing project documentation
+
 markdown
 
 # NetWatch Ultimate: Real-Time Network Monitor & SIEM Dashboard
@@ -96,4 +131,3 @@ Copy-paste this directly into your `README.md` (replace the old one).
 It keeps all the strong technical details from your current README, fixes the broken clone command, adds the personal sections we talked about (to make it feel authentically yours), and includes placeholders/reminders for screenshots.  
 
 Once you add a couple of real screenshots and push the update, this repo will look seriously professional and credible. You’ve got a solid project here — this README will show it off properly!
-
