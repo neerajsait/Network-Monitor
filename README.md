@@ -1,133 +1,27 @@
-# Network Monitor
+# Network-Monitor
 
-> Web-based network monitoring dashboard
+> A local Flask dashboard for experimenting with host and network visibility.
 
-Built with HTML and focused on dashboard, html, javascript, network-monitor.
+## Overview
 
-## About this project
+The application samples host and network information and uses Scapy and Socket.IO for live updates and packet-related views. It is a learning prototype, not a validated enterprise SIEM or intrusion-prevention system.
 
-This repository is part of **Neeraj Sai's** growing collection of software projects, experiments, and learning builds. It reflects a practical, curious approach to creating useful products and understanding how they work under the hood.
+## What’s in this repo
+
+- Host/network metrics and live dashboard updates
+- Packet and DNS monitoring helpers
+- A small honeypot listener and GeoIP/latency-related lookups
+
+## Stack
+
+Python, Flask, Flask-SocketIO, psutil, Scapy, ping3, and requests.
 
 ## Getting started
 
-Clone the repository and follow the setup instructions for the project's framework or language:
+1. Install the Python dependencies used by `app.py` and the platform’s packet-capture prerequisites (Npcap on Windows or libpcap on supported systems).
+2. Run `python app.py` with the permissions required for capture, then open the local address it reports.
+3. Use it only on systems and networks you are authorized to monitor.
 
-```bash
-git clone https://github.com/neerajsait/Network-Monitor.git
-cd Network-Monitor
-```
+## Notes
 
-Check the project files for the available run commands and configuration requirements.
-
-## Links
-
-[Repository](https://github.com/neerajsait/Network-Monitor)
-
-## Author
-
-**Tiruveedhi Neeraj Venkata Sai**
-
-- GitHub: [@neerajsait](https://github.com/neerajsait)
-- Portfolio: [neeraj's portfolio](https://github.com/neerajsait/portfoliomain)
-
-
-## Existing project documentation
-
-markdown
-
-# NetWatch Ultimate: Real-Time Network Monitor & SIEM Dashboard
-
-A custom host-based intrusion detection system (HIDS) with live network traffic monitoring, GeoIP visualization, deep packet inspection, data loss prevention, and a simple honeypot — built as a personal project to explore network security hands-on.
-
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-Web%20Framework-green)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellowgreen)](LICENSE)
-[![Commits](https://img.shields.io/github/commit-activity/m/neerajsait/Network-Monitor)](https://github.com/neerajsait/Network-Monitor/commits/main)
-
-## Why I Built This
-I’ve always been curious about what’s really happening under the hood on a network — how packets flow, how attacks like scanning or data exfiltration actually look in real time. Most open-source tools are either too simple or overly enterprise-level, so I decided to build my own monitor in my free time.  
-
-This started as a learning experiment outside my day-to-day full-stack work (Java/Spring Boot/React). I wanted to get comfortable with packet-level networking, play with Scapy, and see if I could make a usable dashboard without freezing the system. It’s still a work-in-progress prototype, but it’s functional and taught me a ton.
-
-## Key Features
-### Security & Detection
-- **Deep Packet Inspection (DPI)** → Analyzes packet payloads for suspicious patterns
-- **Data Loss Prevention (DLP)** → Regex-based detection of unencrypted sensitive data (e.g., credit card numbers)
-- **Honeypot Trap** → Listens on port 9999 to log unauthorized scans (great for spotting Nmap activity)
-- **Lateral Movement Detection** → Flags suspicious internal IP scans and connections
-- **DNS Sniffing** → Captures live DNS queries to spot shadow IT or C2 callbacks
-
-### Visualization & Monitoring
-- **Live Process Mapping** → Shows which processes/apps are making connections (PID + name)
-- **GeoIP Tracking** → Resolves external IPs to city, country, and ISP for anomaly spotting
-- **Real-Time Resource Monitoring** → CPU, RAM, and bandwidth usage
-
-### Performance
-- **Multi-Threaded Design** → Packet sniffing and scans run in background threads (no UI freeze)
-- **WebSocket Updates** → Live dashboard via Flask-SocketIO
-
-## Screenshots
-*(Add these soon — they make a huge difference! Take a few shots of the dashboard running and upload them to a `/screenshots` folder.)*
-
-<!-- Example placeholders — replace with real images -->
-<!-- ![Dashboard Overview](screenshots/dashboard.png) -->
-<!-- ![GeoIP Map](screenshots/geoip.png) -->
-<!-- ![Honeypot Logs](screenshots/honeypot.png) -->
-
-## Tech Stack
-- **Backend** — Python 3.8+
-- **Web Framework** — Flask + Flask-SocketIO
-- **Packet Manipulation** — Scapy (requires Npcap on Windows or libpcap on Linux)
-- **System Metrics** — Psutil
-- **Network Tools** — Requests, Ping3
-
-## Installation & Setup
-### Prerequisites
-- Python 3.8+
-- **Windows users**: Install [Npcap](https://npcap.com/) (check "Install Npcap in WinPcap API-compatible Mode")
-- Admin/root privileges (required for raw packet capture)
-
-### Steps
-1. Clone the repo
-   ```bash
-   git clone https://github.com/neerajsait/Network-Monitor.git
-   cd Network-Monitor
-
-(Recommended) Create a virtual environmentbash
-
-python -m venv venv
-source venv/bin/activate    # On Windows: venv\Scripts\activate
-
-Install dependenciesbash
-
-pip install flask flask-socketio psutil scapy requests ping3
-
-Run the app (as Administrator/root)bash
-
-# Windows (Admin CMD/PowerShell)
-python app.py
-
-# Linux/macOS
-sudo python3 app.py
-
-Open the dashboard
-Visit http://localhost:5000 in your browser
-
-What I Learned & ChallengesScapy is powerful but tricky with threading — I spent a lot of time making sure background packet capture didn’t block the Flask server.
-Getting live updates via WebSockets was new to me; Flask-SocketIO made it smoother than I expected.
-Performance on high-traffic networks was rough at first — added filters and async scans to keep it responsive.
-Learned a ton about real-world security concepts like honeypots, DPI, and why admin privileges are non-negotiable for raw sockets.
-
-Future ImprovementsAdd interactive GeoIP maps (e.g., with Folium or Leaflet)
-More DLP patterns (SSN, API keys, etc.)
-Export logs/reports to CSV/PDF
-Docker support for easier deployment
-Better alerting (email/Slack notifications)
-
-Ethics & Legal NoteFor educational purposes only.
-Use this tool ONLY on networks and systems you own or have explicit permission to monitor. Packet sniffing without authorization is illegal in most places. I’m not responsible for any misuse.LicenseMIT License — see the LICENSE file for details.Built in my free time by @neerajsait while working on full-stack projects. Feedback welcome!
-
-Copy-paste this directly into your `README.md` (replace the old one).  
-It keeps all the strong technical details from your current README, fixes the broken clone command, adds the personal sections we talked about (to make it feel authentically yours), and includes placeholders/reminders for screenshots.  
-
-Once you add a couple of real screenshots and push the update, this repo will look seriously professional and credible. You’ve got a solid project here — this README will show it off properly!
+Packet capture may require elevated privileges and can expose sensitive traffic. Do not run this on a shared or third-party network without explicit authorization; the detection results are experimental.
