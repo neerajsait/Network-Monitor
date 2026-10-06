@@ -1,0 +1,6 @@
+flask==3.0.3
+flask-socketio==5.3.6
+psutil==5.9.8
+scapy==2.5.0
+requests==2.32.3
+ping3==4.0.8

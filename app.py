@@ -9,11 +9,11 @@ import time
 import json
 import atexit
 import threading
+import ipaddress
 from datetime import datetime
 from collections import deque
 from ping3 import ping
 from scapy.all import get_if_list, sniff, IP, TCP, UDP, Raw, DNSQR, ARP, Ether, srp, conf
-
 
 def get_default_interface():
     try:
@@ -26,21 +26,18 @@ def get_default_interface():
         for iface in get_if_list():
             if iface != "lo" and "loopback" not in iface.lower():
                 return iface
-    except:
+    except Exception:
         pass
     return conf.iface
 
 IFACE = get_default_interface()
 print(f"\n[NETWORK] Using Interface: {IFACE}")
 
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'netwatch_ultimate_2025'
+app.config['SECRET_KEY'] = os.environ.get('NETWATCH_SECRET', os.urandom(24).hex())
 IPINFO_TOKEN = os.getenv("IPINFO_TOKEN", "")
 
-
-socketio = SocketIO(app, async_mode='threading')
-
+socketio = SocketIO(app, cors_allowed_origins=["http://127.0.0.1:5000", "http://localhost:5000"], async_mode='threading')
 
 process_cache = {}
 geoip_cache = {}
@@ -50,18 +47,16 @@ dns_queries = deque(maxlen=60)
 session_log = []
 lan_devices = []
 honey_pot_log = []
-scan_in_progress = False  
+scan_in_progress = False
 
 CACHE_TTL = 3600
 METRICS_TTL = 30
 
-
 def safe_emit(event, data):
     try:
         socketio.emit(event, data)
-    except:
+    except Exception:
         pass
-
 
 def honey_pot_listener():
     try:
@@ -85,7 +80,6 @@ def honey_pot_listener():
 
 threading.Thread(target=honey_pot_listener, daemon=True).start()
 
-
 def get_app_info(pid):
     if not pid: return "System", "Kernel", 0.0, 0.0
     now = time.time()
@@ -98,7 +92,7 @@ def get_app_info(pid):
             name = p.name()
             exe = p.exe() or "N/A"
             process_cache[pid] = (name, exe, now)
-        except:
+        except Exception:
             return "Unknown", "Denied", 0.0, 0.0
 
     try:
@@ -106,11 +100,17 @@ def get_app_info(pid):
         cpu = p.cpu_percent(interval=None)
         mem = p.memory_percent()
         return name, exe, cpu, mem
-    except:
+    except Exception:
         return name, exe, 0.0, 0.0
 
+def is_private_ip(ip):
+    try:
+        return ipaddress.ip_address(ip).is_private
+    except ValueError:
+        return False
+
 def get_geoip(ip):
-    if ip.startswith(('127.', '192.168.', '10.', '172.', '::1')):
+    if is_private_ip(ip) or ip == '::1':
         return {"city": "Local", "country": "LAN", "loc": "0,0", "org": "Private", "is_anonymous": False}
     
     now = time.time()
@@ -118,36 +118,43 @@ def get_geoip(ip):
         return geoip_cache[ip][0]
     
     try:
-        url = f"https://ipinfo.io/{ip}/json?token={IPINFO_TOKEN}" if IPINFO_TOKEN else f"http://ip-api.com/json/{ip}"
-        r = requests.get(url, timeout=2).json() 
+        if IPINFO_TOKEN:
+            url = f"https://ipinfo.io/{ip}/json?token={IPINFO_TOKEN}"
+        else:
+            url = f"https://ipapi.co/{ip}/json/"
+            
+        r = requests.get(url, timeout=2).json()
         
-        loc = r.get('loc') or f"{r.get('lat',0)},{r.get('lon',0)}"
+        loc = r.get('loc') or f"{r.get('latitude',0)},{r.get('longitude',0)}"
+        if 'lat' in r and 'lon' in r:
+            loc = f"{r['lat']},{r['lon']}"
+            
         data = {
             "city": r.get('city', 'Unknown'),
-            "country": r.get('country', r.get('countryCode', '??')),
+            "country": r.get('country_name', r.get('country', r.get('countryCode', '??'))),
             "loc": loc,
             "org": r.get('org', ''),
             "is_anonymous": bool(r.get('proxy') or r.get('hosting') or r.get('privacy', {}).get('vpn'))
         }
         geoip_cache[ip] = (data, now)
         return data
-    except:
+    except Exception:
         return {"city": "??", "country": "??", "loc": "0,0", "org": "", "is_anonymous": False}
 
 def get_latency(ip):
-    if ip.startswith(('127.', '192.168.', '10.', '172.')): return 0
+    if is_private_ip(ip): return 0
     now = time.time()
     if ip in metrics_cache and (now - metrics_cache[ip][1]) < METRICS_TTL:
         return metrics_cache[ip][0]
     try:
         lat = ping(ip, unit='ms', timeout=0.5)
         latency = round(lat, 1) if lat else 0
-    except: latency = 0
+    except Exception: latency = 0
     metrics_cache[ip] = (latency, now)
     return latency
 
 def get_vitals():
-    bat = psutil.sensors_battery()
+    bat = getattr(psutil, "sensors_battery", lambda: None)()
     return {
         "cpu": psutil.cpu_percent(),
         "ram": psutil.virtual_memory().percent,
@@ -157,7 +164,6 @@ def get_vitals():
 def get_traffic_stats():
     s = psutil.net_io_counters()
     return round((s.bytes_sent + s.bytes_recv) / 1024**3, 2)
-
 
 def get_network_data():
     connections = []
@@ -192,9 +198,18 @@ def get_network_data():
         for k in list(connection_times.keys()):
             if k not in active: del connection_times[k]
             
-    except: pass
+    except Exception: pass
     return connections
 
+def luhn_check(card_num):
+    card_num = [int(c) for c in str(card_num) if c.isdigit()]
+    checksum = 0
+    for i, digit in enumerate(reversed(card_num)):
+        if i % 2 == 1:
+            digit *= 2
+            if digit > 9: digit -= 9
+        checksum += digit
+    return checksum % 10 == 0
 
 def capture_packets():
     if scan_in_progress: return [] 
@@ -203,18 +218,20 @@ def capture_packets():
         if IP in pkt and Raw in pkt:
             try:
                 payload = pkt[Raw].load.decode('utf-8', errors='ignore')
-                if re.search(r'\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\b', payload):
-                    safe_emit('alert', {'type': 'danger', 'message': f"CARD LEAK DETECTED → {pkt[IP].dst}"})
+                matches = re.findall(r'\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\b', payload)
+                for match in matches:
+                    if luhn_check(match):
+                        safe_emit('alert', {'type': 'danger', 'message': f"CARD LEAK DETECTED → {pkt[IP].dst}"})
                 packets.append({
                     "src": pkt[IP].src,
                     "dst": pkt[IP].dst,
                     "proto": "TCP" if TCP in pkt else "UDP",
                     "payload_preview": payload[:50].replace('\n', ' ')
                 })
-            except: pass
+            except Exception: pass
     try:
-        sniff(iface=IFACE, prn=handler, filter="tcp or udp", timeout=0.15, store=False, count=5)
-    except: pass
+        sniff(iface=IFACE, prn=handler, filter="tcp or udp", timeout=0.25, store=False)
+    except Exception: pass
     return packets
 
 def capture_dns():
@@ -228,12 +245,11 @@ def capture_dns():
                     "query": q,
                     "src": pkt[IP].src
                 })
-            except: pass
+            except Exception: pass
     try:
         sniff(iface=IFACE, filter="port 53", prn=handler, timeout=0.15, store=False, count=3)
-    except: pass
+    except Exception: pass
     return list(dns_queries)[-10:]
-
 
 def perform_lan_scan_task():
     global scan_in_progress
@@ -242,20 +258,16 @@ def perform_lan_scan_task():
 
     try:
         safe_emit('alert', {'type': 'info', 'message': 'Scanning LAN... (Hold tight)'})
-
-        
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.connect(('8.8.8.8', 1))
             my_ip = s.getsockname()[0]
-        except:
+        except Exception:
             my_ip = '127.0.0.1'
         finally:
             s.close()
 
         network = '.'.join(my_ip.split('.')[:-1]) + '.0/24'
-        
-        
         ans, _ = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=network), timeout=2, verbose=0, iface=IFACE)
 
         devices = []
@@ -279,16 +291,6 @@ def lan_scan():
         safe_emit('alert', {'type': 'warning', 'message': 'Scan already in progress!'})
         return
     threading.Thread(target=perform_lan_scan_task, daemon=True).start()
-
-@socketio.on('kill_process')
-def kill_process(data):
-    try:
-        pid = int(data['pid'])
-        psutil.Process(pid).terminate()
-        safe_emit('alert', {'type': 'success', 'message': f'Killed PID {pid}'})
-    except:
-        safe_emit('alert', {'type': 'danger', 'message': 'Kill Failed'})
-
 
 def background_monitor():
     while True:
@@ -316,7 +318,7 @@ if __name__ == '__main__':
     threading.Thread(target=background_monitor, daemon=True).start()
     
     print("\n" + "="*60)
-    print(" NETWATCH ULTIMATE 2025 :: THREADING MODE ACTIVE")
+    print(" NETWATCH ULTIMATE 2025 :: SECURE MODE ACTIVE")
     print(f" DASHBOARD → http://localhost:5000")
     print("="*60 + "\n")
     
