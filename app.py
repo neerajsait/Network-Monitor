@@ -39,7 +39,7 @@ app.config['SECRET_KEY'] = 'netwatch_ultimate_2025'
 IPINFO_TOKEN = os.getenv("IPINFO_TOKEN", "")
 
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, async_mode='threading')
 
 
 process_cache = {}
@@ -320,4 +320,4 @@ if __name__ == '__main__':
     print(f" DASHBOARD → http://localhost:5000")
     print("="*60 + "\n")
     
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+    socketio.run(app, host='127.0.0.1', port=5000, debug=False)
